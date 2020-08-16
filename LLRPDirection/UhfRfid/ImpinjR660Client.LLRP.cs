@@ -40,6 +40,20 @@ namespace LLRPDirection.UhfRfid {
 
       msg.Custom.Add(pLinkMonitor);
 
+      // Event notification
+      PARAM_ReaderEventNotificationSpec pNotificationSpec = new PARAM_ReaderEventNotificationSpec();
+      msg.ReaderEventNotificationSpec = pNotificationSpec;
+
+      pNotificationSpec.EventNotificationState = new PARAM_EventNotificationState[1];
+
+      PARAM_EventNotificationState pROSpecState = new PARAM_EventNotificationState();
+      pNotificationSpec.EventNotificationState[0] = pROSpecState;
+
+      pROSpecState.NotificationState = true;
+      pROSpecState.EventType = ENUM_NotificationEventType.ROSpec_Event;
+
+      //Console.Error.WriteLine($"{msg.ToString()}");
+
       MSG_ERROR_MESSAGE? msgErr = null;
       MSG_SET_READER_CONFIG_RESPONSE? msgResp = this.BaseClient?.SET_READER_CONFIG(
           msg: msg,
@@ -175,7 +189,8 @@ namespace LLRPDirection.UhfRfid {
       // 出力電力
       PARAM_ImpinjTransmitPower pTransmitPower = new PARAM_ImpinjTransmitPower();
       pC1G2DirectionConfig.ImpinjTransmitPower = pTransmitPower;
-      pTransmitPower.TransmitPower = 81;
+      //pTransmitPower.TransmitPower = 81;
+      pTransmitPower.TransmitPower = 21;
 
       PARAM_ImpinjDirectionReporting pDirectionReporting = new PARAM_ImpinjDirectionReporting();
       pDI.ImpinjDirectionReporting = pDirectionReporting;

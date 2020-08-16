@@ -38,7 +38,9 @@ namespace LLRPDirection.UhfRfid {
       }
 
       this.BaseClient = new LLRPClient(port: this.Port);
+      this.BaseClient.OnKeepAlive += this.OnLLRPClientKeepalive;
       this.BaseClient.OnRoAccessReportReceived += this.OnLLRPClientRoAccessReportReceived;
+      this.BaseClient.OnReaderEventNotification += this.OnLLRPClientReaderEventNotification;
 
 
       ENUM_ConnectionAttemptStatusType status = ENUM_ConnectionAttemptStatusType.Success;
@@ -78,6 +80,7 @@ namespace LLRPDirection.UhfRfid {
 
       if(this.BaseClient != null) {
         this.BaseClient.OnRoAccessReportReceived -= this.OnLLRPClientRoAccessReportReceived;
+        this.BaseClient.OnReaderEventNotification -= this.OnLLRPClientReaderEventNotification;
       }
 
       this.Stop();
@@ -159,6 +162,22 @@ namespace LLRPDirection.UhfRfid {
           }
         }
       }
+    }
+
+
+    /// <summary></summary>
+    private void OnLLRPClientKeepalive(MSG_KEEPALIVE msg) {
+#if DEBUG
+      Console.Error.WriteLine($"[Debug] {msg.MSG_ID}");
+      Console.Error.WriteLine($"{msg.ToString()}");
+#endif
+    }
+
+
+    /// <summary></summary>
+    private void OnLLRPClientReaderEventNotification(MSG_READER_EVENT_NOTIFICATION msg) {
+      var nd = msg.ReaderEventNotificationData;
+      Console.Error.WriteLine($"[Debug] {msg.ToString()}");
     }
   }
 }

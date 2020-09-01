@@ -56,14 +56,9 @@ namespace LLRPDirection.UhfRfid {
 
       try {
         this.ResetToFactoryDefault();
-
         this.EnableImpinjExtensions();
 
-        this.SetReaderConfig();
-        this.SetAntennaConfig();
-
-        this.AddROSpec(14150);
-        this.EnableROSpec(14150);
+        //this.EnableROSpec(14150);
       } catch(Exception except) {
         this.Dispose();
 
@@ -85,8 +80,6 @@ namespace LLRPDirection.UhfRfid {
 
       this.Stop();
 
-      this.DisableROSpec(14150);
-      this.DeleteROSpec(14150);
 
       this.ResetToFactoryDefault();
       this.EnableImpinjExtensions();
@@ -102,6 +95,12 @@ namespace LLRPDirection.UhfRfid {
       }
 
       this.isReading = true;
+
+      this.SetReaderConfig();
+      this.SetAntennaConfig();
+
+      this.AddROSpec(14150);
+      this.EnableROSpec(14150);
       this.StartROSpec(14150);
     }
 
@@ -115,6 +114,8 @@ namespace LLRPDirection.UhfRfid {
       this.isReading = false;
 
       this.StopROSpec(14150);
+      this.DisableROSpec(14150);
+      this.DeleteROSpec(14150);
     }
 
 
@@ -152,10 +153,10 @@ namespace LLRPDirection.UhfRfid {
               DateTime dtLastSeen = UnixDateTime.Convert(info.ImpinjDirectionReportData.LastSeenTimestampUTC);
 
               /*
-              Console.Error.WriteLine($"{epc} Type: {type}, Status: {status}");
-              Console.Error.WriteLine($"  Sector: {firstSeenSectorId} => {lastSeenSectorId}");
-              Console.Error.WriteLine($"{dtFirstSeen.ToString("yyyy-MM-ddTHH:mm:ss")} => {dtLastSeen.ToString("yyyy-MM-ddTHH:mm:ss")}");
-              */
+                 Console.Error.WriteLine($"{epc} Type: {type}, Status: {status}");
+                 Console.Error.WriteLine($"  Sector: {firstSeenSectorId} => {lastSeenSectorId}");
+                 Console.Error.WriteLine($"{dtFirstSeen.ToString("yyyy-MM-ddTHH:mm:ss")} => {dtLastSeen.ToString("yyyy-MM-ddTHH:mm:ss")}");
+                 */
 
               Console.Error.WriteLine($"{epc},{dtFirstSeen.ToString(DateTimeFormat)},{dtLastSeen.ToString(DateTimeFormat)},{type},{firstSeenSectorId},{lastSeenSectorId},{status}");
             }

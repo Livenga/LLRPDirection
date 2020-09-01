@@ -23,11 +23,27 @@ namespace LLRPDirection {
       using(ImpinjR660Client xspan = new ImpinjR660Client(host: host)) {
         xspan.Open();
 
-        xspan.Start();
-        Console.WriteLine($"Please any key ...");
-        Console.ReadLine();
+        var task = new Task(ExecuteLoop, xspan);
 
-        xspan.Stop();
+        task.Start();
+        task.Wait();
+      }
+    }
+
+
+    private static void ExecuteLoop(object? state) {
+      if(state == null || ! (state is IUhfReader)) {
+        return;
+      }
+
+      IUhfReader reader = (IUhfReader)state;
+
+      while(true) {
+        reader.Start();
+        Task.Delay(100).Wait();
+
+        reader.Stop();
+        Task.Delay(65).Wait();
       }
     }
   }

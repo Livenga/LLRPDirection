@@ -55,8 +55,6 @@ namespace LLRPDirection.UhfRfid {
       }
 
       try {
-        this.ResetToFactoryDefault();
-        this.EnableImpinjExtensions();
 
         //this.EnableROSpec(14150);
       } catch(Exception except) {
@@ -95,6 +93,9 @@ namespace LLRPDirection.UhfRfid {
       }
 
       this.isReading = true;
+
+      this.ResetToFactoryDefault();
+      this.EnableImpinjExtensions();
 
       this.SetReaderConfig();
       this.SetAntennaConfig();

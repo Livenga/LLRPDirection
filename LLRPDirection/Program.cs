@@ -44,6 +44,10 @@ namespace LLRPDirection {
 
         reader.Stop();
         Task.Delay(65).Wait();
+
+        if(! reader.IsConnected) {
+          break;
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 using System;
 using System.Data;
 using System.Diagnostics;
-
+using System.Timers;
 using Org.LLRP.LTK.LLRPV1;
 using Org.LLRP.LTK.LLRPV1.DataType;
 using Org.LLRP.LTK.LLRPV1.Impinj;
@@ -10,6 +10,9 @@ using LLRPDirection.DataType;
 
 
 namespace LLRPDirection.UhfRfid {
+  using ServerTimer = System.Timers.Timer;
+
+
   /// <summary></summary>
   public partial class ImpinjR660Client : AbsLLRPReader, IUhfReader, IDisposable {
     /// <summary></summary>
@@ -18,16 +21,26 @@ namespace LLRPDirection.UhfRfid {
 
 
     private bool isReading = false;
+    private DateTime keepalivedAt = DateTime.Now;
+    private readonly ServerTimer intervalTimer;
 
+
+    public ImpinjR660Client(string host, int port, int timeout)
+      : base(host, port, timeout) {
+      this.intervalTimer = new ServerTimer(15000f);
+      this.intervalTimer.Elapsed += this.OnIntervalTimerElapsed;
+      this.intervalTimer.AutoReset = true;
+    }
 
     /// <summary></summary>
-    public ImpinjR660Client(string host, int port) : base(host, port, 15000) {
+    public ImpinjR660Client(string host, int port)
+      : this(host, port, 15000) {
     }
 
 
     /// <summary></summary>
     public ImpinjR660Client(string host)
-      : base(host: host, port: 5084, timeout: 15000) {
+      : this(host: host, port: 5084, timeout: 15000) {
       }
 
 
@@ -54,8 +67,9 @@ namespace LLRPDirection.UhfRfid {
         throw new Exception($"接続失敗({status}) {isSuccessed}");
       }
 
+      this.keepalivedAt = DateTime.Now;
       try {
-
+        this.intervalTimer.Start();
         //this.EnableROSpec(14150);
       } catch(Exception except) {
         this.Dispose();
@@ -70,6 +84,8 @@ namespace LLRPDirection.UhfRfid {
       if(! this.IsConnected) {
         return;
       }
+
+      this.intervalTimer.Stop();
 
       if(this.BaseClient != null) {
         this.BaseClient.OnRoAccessReportReceived -= this.OnLLRPClientRoAccessReportReceived;
@@ -169,6 +185,7 @@ namespace LLRPDirection.UhfRfid {
 
     /// <summary></summary>
     private void OnLLRPClientKeepalive(MSG_KEEPALIVE msg) {
+      this.keepalivedAt = DateTime.Now;
 #if DEBUG
       Console.Error.WriteLine($"[Debug] {msg.MSG_ID}");
       Console.Error.WriteLine($"{msg.ToString()}");
@@ -180,6 +197,20 @@ namespace LLRPDirection.UhfRfid {
     private void OnLLRPClientReaderEventNotification(MSG_READER_EVENT_NOTIFICATION msg) {
       var nd = msg.ReaderEventNotificationData;
       Console.Error.WriteLine($"[Debug] {msg.ToString()}");
+    }
+
+
+    /// <summary></summary>
+    private void OnIntervalTimerElapsed(object source, ElapsedEventArgs e) {
+      if((DateTime.Now - this.keepalivedAt).TotalSeconds >= 30f) {
+        this.intervalTimer.Stop();
+
+        try {
+          this.Dispose();
+        } catch(Exception except) {
+          Console.Error.WriteLine($"[{DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")}] {except.GetType().Name} {except.Message} {except.StackTrace}");
+        }
+      }
     }
   }
 }

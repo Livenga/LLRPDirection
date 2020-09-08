@@ -31,7 +31,7 @@ namespace LLRPDirection.UhfRfid {
       msg.KeepaliveSpec = pKeepalive;
 
       pKeepalive.KeepaliveTriggerType = ENUM_KeepaliveTriggerType.Periodic;
-      pKeepalive.PeriodicTriggerValue = 30000;
+      pKeepalive.PeriodicTriggerValue = 15000;
 
       // Link monitor
       PARAM_ImpinjLinkMonitorConfiguration pLinkMonitor = new PARAM_ImpinjLinkMonitorConfiguration();

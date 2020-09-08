@@ -1,33 +1,48 @@
 using System;
 using System.Data;
 using System.Diagnostics;
-
+using System.Timers;
 using Org.LLRP.LTK.LLRPV1;
 using Org.LLRP.LTK.LLRPV1.DataType;
 using Org.LLRP.LTK.LLRPV1.Impinj;
-
 using LLRPDirection.DataType;
 
 
 namespace LLRPDirection.UhfRfid {
+  using ServerTimer = System.Timers.Timer;
+
   /// <summary></summary>
   public partial class ImpinjR660Client : AbsLLRPReader, IUhfReader, IDisposable {
+    //
+    private static readonly uint roSpecId = 14150;
+    //
+    private readonly static string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.ffffzzz";
+
     /// <summary></summary>
     public bool IsConnected => this.BaseClient?.IsConnected ?? false;
+    /// <summary></summary>
     public bool IsReading => this.isReading;
 
+    public event UhfReaderConnectionLostEventHandler? ConnectionLost = null;
+
+
+    private readonly ServerTimer intervalTimer;
 
     private bool isReading = false;
+    private DateTime keepalivedAt = DateTime.Now;
 
 
     /// <summary></summary>
-    public ImpinjR660Client(string host, int port) : base(host, port, 15000) {
-    }
+    public ImpinjR660Client(string host, int port)
+      : base(host, port, 15000) {
+        this.intervalTimer = new ServerTimer(10000f);
+        this.intervalTimer.Elapsed += this.OnIntervalTimerElapsed;
+      }
 
 
     /// <summary></summary>
     public ImpinjR660Client(string host)
-      : base(host: host, port: 5084, timeout: 15000) {
+      : this(host: host, port: 5084) {
       }
 
 
@@ -62,8 +77,10 @@ namespace LLRPDirection.UhfRfid {
         this.SetReaderConfig();
         this.SetAntennaConfig();
 
-        this.AddROSpec(14150);
-        this.EnableROSpec(14150);
+        this.AddROSpec(roSpecId);
+        this.EnableROSpec(roSpecId);
+
+        this.keepalivedAt = DateTime.Now;
       } catch(Exception except) {
         this.Dispose();
 
@@ -85,8 +102,8 @@ namespace LLRPDirection.UhfRfid {
 
       this.Stop();
 
-      this.DisableROSpec(14150);
-      this.DeleteROSpec(14150);
+      this.DisableROSpec(roSpecId);
+      this.DeleteROSpec(roSpecId);
 
       this.ResetToFactoryDefault();
       this.EnableImpinjExtensions();
@@ -102,7 +119,9 @@ namespace LLRPDirection.UhfRfid {
       }
 
       this.isReading = true;
-      this.StartROSpec(14150);
+      this.StartROSpec(roSpecId);
+
+      this.intervalTimer.Start();
     }
 
 
@@ -112,9 +131,10 @@ namespace LLRPDirection.UhfRfid {
         return;
       }
 
+      this.intervalTimer.Stop();
       this.isReading = false;
 
-      this.StopROSpec(14150);
+      this.StopROSpec(roSpecId);
     }
 
 
@@ -129,7 +149,6 @@ namespace LLRPDirection.UhfRfid {
     }
 
 
-    private readonly static string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.ffffzzz";
 
     /// <summary></summary>
     private void OnLLRPClientRoAccessReportReceived(MSG_RO_ACCESS_REPORT msg) {
@@ -152,10 +171,10 @@ namespace LLRPDirection.UhfRfid {
               DateTime dtLastSeen = UnixDateTime.Convert(info.ImpinjDirectionReportData.LastSeenTimestampUTC);
 
               /*
-              Console.Error.WriteLine($"{epc} Type: {type}, Status: {status}");
-              Console.Error.WriteLine($"  Sector: {firstSeenSectorId} => {lastSeenSectorId}");
-              Console.Error.WriteLine($"{dtFirstSeen.ToString("yyyy-MM-ddTHH:mm:ss")} => {dtLastSeen.ToString("yyyy-MM-ddTHH:mm:ss")}");
-              */
+                 Console.Error.WriteLine($"{epc} Type: {type}, Status: {status}");
+                 Console.Error.WriteLine($"  Sector: {firstSeenSectorId} => {lastSeenSectorId}");
+                 Console.Error.WriteLine($"{dtFirstSeen.ToString("yyyy-MM-ddTHH:mm:ss")} => {dtLastSeen.ToString("yyyy-MM-ddTHH:mm:ss")}");
+                 */
 
               Console.Error.WriteLine($"{epc},{dtFirstSeen.ToString(DateTimeFormat)},{dtLastSeen.ToString(DateTimeFormat)},{type},{firstSeenSectorId},{lastSeenSectorId},{status}");
             }
@@ -171,6 +190,7 @@ namespace LLRPDirection.UhfRfid {
       Console.Error.WriteLine($"[Debug] {msg.MSG_ID}");
       Console.Error.WriteLine($"{msg.ToString()}");
 #endif
+      this.keepalivedAt = DateTime.Now;
     }
 
 
@@ -178,6 +198,20 @@ namespace LLRPDirection.UhfRfid {
     private void OnLLRPClientReaderEventNotification(MSG_READER_EVENT_NOTIFICATION msg) {
       var nd = msg.ReaderEventNotificationData;
       Console.Error.WriteLine($"[Debug] {msg.ToString()}");
+    }
+
+
+    //
+    private void OnIntervalTimerElapsed(object source, ElapsedEventArgs e) {
+      double v = (DateTime.Now - this.keepalivedAt).TotalSeconds;
+
+      Console.Error.WriteLine($"Elapsed: {v}");
+      if(v >= 30f) {
+        this.intervalTimer.Stop();
+
+        this.Dispose();
+        this.ConnectionLost?.Invoke(this);
+      }
     }
   }
 }

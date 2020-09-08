@@ -6,6 +6,8 @@ namespace LLRPDirection.UhfRfid {
     bool IsConnected { get; }
     bool IsReading { get; }
 
+    event UhfReaderConnectionLostEventHandler? ConnectionLost;
+
     void Open();
     void Close();
 

@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using LLRPDirection.UhfRfid;
+using LLRPDirection.Utils;
 
 
 namespace LLRPDirection {
@@ -22,22 +22,26 @@ namespace LLRPDirection {
 
       host = args[0];
       Console.Error.WriteLine($"host name: {host}");
+      Log.WriteLine($"Conncting {host}");
 
       eventHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
       using(ImpinjR660Client xspan = new ImpinjR660Client(host: host)) {
         xspan.ConnectionLost += OnUhfReaderConnectionLost;
         xspan.Open();
-
         xspan.Start();
 
         eventHandle.WaitOne();
 
         xspan.Stop();
       }
+
+      Log.WriteLine($"Exit");
     }
 
     /// <summary></summary>
     private static void OnUhfReaderConnectionLost(IUhfReader source) {
+      Log.WriteLine($"# Connection Lost.");
+
       Console.Error.WriteLine($"# Connection Lost.");
       eventHandle?.Set();
     }

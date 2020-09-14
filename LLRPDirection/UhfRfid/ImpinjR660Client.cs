@@ -188,14 +188,20 @@ namespace LLRPDirection.UhfRfid {
     private void OnLLRPClientKeepalive(MSG_KEEPALIVE msg) {
 #if DEBUG
       Console.Error.WriteLine($"[Debug] {msg.MSG_ID}");
-      Console.Error.WriteLine($"{msg.ToString()}");
 #endif
-
 
       // Keepalive ACK の送信
       MSG_ERROR_MESSAGE? msgErr = null;
       MSG_KEEPALIVE_ACK msgAck = new MSG_KEEPALIVE_ACK();
+
+      msgAck.MSG_ID = msg.MSG_ID;
+
       this.BaseClient?.KEEPALIVE_ACK(msgAck, out msgErr, this.Timeout);
+#if DEBUG
+      if(msgErr != null) {
+        Console.Error.WriteLine($"{msgErr.ToString()}");
+      }
+#endif
 
       this.keepalivedAt = DateTime.Now;
     }

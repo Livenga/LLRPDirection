@@ -190,6 +190,13 @@ namespace LLRPDirection.UhfRfid {
       Console.Error.WriteLine($"[Debug] {msg.MSG_ID}");
       Console.Error.WriteLine($"{msg.ToString()}");
 #endif
+
+
+      // Keepalive ACK の送信
+      MSG_ERROR_MESSAGE? msgErr = null;
+      MSG_KEEPALIVE_ACK msgAck = new MSG_KEEPALIVE_ACK();
+      this.BaseClient?.KEEPALIVE_ACK(msgAck, out msgErr, this.Timeout);
+
       this.keepalivedAt = DateTime.Now;
     }
 
@@ -206,7 +213,7 @@ namespace LLRPDirection.UhfRfid {
       double v = (DateTime.Now - this.keepalivedAt).TotalSeconds;
 
       Console.Error.WriteLine($"Elapsed: {v}");
-      if(false && v >= 30f) {
+      if(v >= 60f) {
         this.intervalTimer.Stop();
 
         this.Dispose();

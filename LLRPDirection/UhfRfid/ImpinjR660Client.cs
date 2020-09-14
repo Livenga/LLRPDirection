@@ -206,7 +206,7 @@ namespace LLRPDirection.UhfRfid {
       double v = (DateTime.Now - this.keepalivedAt).TotalSeconds;
 
       Console.Error.WriteLine($"Elapsed: {v}");
-      if(v >= 30f) {
+      if(false && v >= 30f) {
         this.intervalTimer.Stop();
 
         this.Dispose();

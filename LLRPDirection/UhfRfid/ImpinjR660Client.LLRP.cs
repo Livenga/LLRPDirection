@@ -31,7 +31,8 @@ namespace LLRPDirection.UhfRfid {
       msg.KeepaliveSpec = pKeepalive;
 
       pKeepalive.KeepaliveTriggerType = ENUM_KeepaliveTriggerType.Periodic;
-      pKeepalive.PeriodicTriggerValue = 15000;
+      //pKeepalive.PeriodicTriggerValue = 15000;
+      pKeepalive.PeriodicTriggerValue = 30000;
 
       // Link monitor
       PARAM_ImpinjLinkMonitorConfiguration pLinkMonitor = new PARAM_ImpinjLinkMonitorConfiguration();
@@ -189,8 +190,8 @@ namespace LLRPDirection.UhfRfid {
       // 出力電力
       PARAM_ImpinjTransmitPower pTransmitPower = new PARAM_ImpinjTransmitPower();
       pC1G2DirectionConfig.ImpinjTransmitPower = pTransmitPower;
-      //pTransmitPower.TransmitPower = 81;
-      pTransmitPower.TransmitPower = 21;
+      pTransmitPower.TransmitPower = 81;
+      //pTransmitPower.TransmitPower = 21;
 
       PARAM_ImpinjDirectionReporting pDirectionReporting = new PARAM_ImpinjDirectionReporting();
       pDI.ImpinjDirectionReporting = pDirectionReporting;
